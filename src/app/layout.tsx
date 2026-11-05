@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { FeedbackProvider } from "@/components/Feedback";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
 
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <FeedbackProvider>{children}</FeedbackProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

@@ -1,0 +1,73 @@
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+}
+
+.conteudo {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.titulo {
+  font-size: 1.05rem;
+}
+
+.descricao {
+  margin-top: 4px;
+}
+
+.data {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.acoes {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.acoes a {
+  padding: 4px 0;
+  text-decoration: underline;
+}
+
+.acoes button,
+.aviso button {
+  padding: 4px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.acoes button:disabled {
+  cursor: progress;
+}
+
+.aviso {
+  padding: 32px 0;
+  text-align: center;
+}
+
+.aviso button {
+  margin-top: 12px;
+}
+
+@media (max-width: 480px) {
+  .item {
+    flex-direction: column;
+  }
+}

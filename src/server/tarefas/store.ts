@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { DadosTarefa, Tarefa } from "@/lib/tarefa-schema";
 
 type Store = {
