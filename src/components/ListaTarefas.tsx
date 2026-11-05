@@ -6,7 +6,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { DialogoConfirmacao } from "@/components/DialogoConfirmacao";
 import { botaoSecundario } from "@/components/estilos";
 import { useFeedback } from "@/components/Feedback";
 import { TAREFAS_POR_PAGINA, type Tarefa } from "@/lib/tarefa-schema";
@@ -27,14 +28,28 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const mostrarFeedback = useFeedback();
+  const [confirmando, setConfirmando] = useState(false);
+  const item = useRef<HTMLLIElement>(null);
+
+  // O item vai sumir: sem isso, quem usa teclado voltaria ao início da página.
+  function moverFocoParaVizinho() {
+    const vizinho =
+      item.current?.nextElementSibling ?? item.current?.previousElementSibling;
+    const alvo =
+      vizinho?.querySelector<HTMLElement>("a") ??
+      document.querySelector<HTMLElement>("main a");
+    alvo?.focus();
+  }
 
   const deletar = useMutation(
     trpc.tarefas.deletar.mutationOptions({
-      onSuccess: () =>
+      onSuccess: () => {
+        moverFocoParaVizinho();
         mostrarFeedback({
           tipo: "sucesso",
           texto: `Tarefa "${tarefa.titulo}" excluída.`,
-        }),
+        });
+      },
       onError: (erro) =>
         mostrarFeedback({
           tipo: "erro",
@@ -49,14 +64,11 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
     }),
   );
 
-  function confirmarExclusao() {
-    if (window.confirm(`Excluir a tarefa "${tarefa.titulo}"?`)) {
-      deletar.mutate({ id: tarefa.id });
-    }
-  }
-
   return (
-    <li className="flex flex-col gap-3 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+    <li
+      ref={item}
+      className="flex flex-col gap-3 py-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8"
+    >
       <div className="min-w-0 wrap-anywhere">
         <h2 className="text-base font-medium text-tinta">{tarefa.titulo}</h2>
         {tarefa.descricao && (
@@ -83,7 +95,7 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
         </Link>
         <button
           type="button"
-          onClick={confirmarExclusao}
+          onClick={() => setConfirmando(true)}
           disabled={deletar.isPending}
           aria-label={
             deletar.isPending ? undefined : `Excluir a tarefa "${tarefa.titulo}"`
@@ -93,6 +105,15 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
           {deletar.isPending ? "Excluindo..." : "Excluir"}
         </button>
       </div>
+      {confirmando && (
+        <DialogoConfirmacao
+          titulo="Excluir esta tarefa?"
+          mensagem={`"${tarefa.titulo}" será excluída. Essa ação não pode ser desfeita.`}
+          rotuloConfirmar="Excluir tarefa"
+          onConfirmar={() => deletar.mutate({ id: tarefa.id })}
+          onFechar={() => setConfirmando(false)}
+        />
+      )}
     </li>
   );
 }

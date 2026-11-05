@@ -30,10 +30,18 @@ jest.mock("@/trpc/client", () => ({
   }),
 }));
 
-// O jsdom não implementa IntersectionObserver.
+// O jsdom não implementa IntersectionObserver nem os métodos do <dialog>.
 let observadores: IntersectionObserverCallback[] = [];
 
 beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function () {
+    this.setAttribute("open", "");
+  };
+  HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute("open");
+    this.dispatchEvent(new Event("close"));
+  };
+
   window.IntersectionObserver = class {
     constructor(callback: IntersectionObserverCallback) {
       this.callback = callback;
@@ -92,6 +100,14 @@ function botaoExcluir(id: number) {
   return screen.getByRole("button", { name: `Excluir a tarefa "Tarefa ${id}"` });
 }
 
+async function pedirExclusao(
+  usuario: ReturnType<typeof userEvent.setup>,
+  id: number,
+) {
+  await usuario.click(botaoExcluir(id));
+  await usuario.click(screen.getByRole("button", { name: "Excluir tarefa" }));
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   jest.restoreAllMocks();
@@ -142,14 +158,38 @@ describe("listagem", () => {
 describe("exclusão", () => {
   it("não chama a API se o usuário cancelar a confirmação", async () => {
     mockListar.mockResolvedValue(pagina([7]));
-    const confirmar = jest.spyOn(window, "confirm").mockReturnValue(false);
     const { usuario } = renderizar();
     await screen.findByText("Tarefa 7");
 
     await usuario.click(botaoExcluir(7));
 
-    expect(confirmar).toHaveBeenCalledWith('Excluir a tarefa "Tarefa 7"?');
+    const dialogo = screen.getByRole("dialog", {
+      name: "Excluir esta tarefa?",
+    });
+    expect(dialogo).toHaveTextContent('"Tarefa 7" será excluída.');
+
+    await usuario.click(
+      within(dialogo).getByRole("button", { name: "Cancelar" }),
+    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(mockDeletar).not.toHaveBeenCalled();
+    expect(screen.getByText("Tarefa 7")).toBeInTheDocument();
+  });
+
+  it("move o foco para a tarefa vizinha depois de excluir", async () => {
+    mockListar.mockResolvedValueOnce(pagina([8, 7]));
+    mockListar.mockResolvedValue(pagina([8]));
+    mockDeletar.mockResolvedValue({ id: 7 });
+    const { usuario } = renderizar();
+    await screen.findByText("Tarefa 7");
+
+    await pedirExclusao(usuario, 7);
+
+    await screen.findByText('Tarefa "Tarefa 7" excluída.');
+    expect(
+      screen.getByRole("link", { name: 'Editar a tarefa "Tarefa 8"' }),
+    ).toHaveFocus();
   });
 
   it("desabilita só o item em exclusão, avisa e atualiza a lista", async () => {
@@ -160,11 +200,10 @@ describe("exclusão", () => {
         concluir = resolve;
       }),
     );
-    jest.spyOn(window, "confirm").mockReturnValue(true);
     const { usuario } = renderizar();
     await screen.findByText("Tarefa 7");
 
-    await usuario.click(botaoExcluir(7));
+    await pedirExclusao(usuario, 7);
 
     expect(
       await screen.findByRole("button", { name: "Excluindo..." }),
@@ -188,11 +227,10 @@ describe("exclusão", () => {
       message: "Tarefa 7 não encontrada",
       data: { code: "NOT_FOUND" },
     });
-    jest.spyOn(window, "confirm").mockReturnValue(true);
     const { usuario } = renderizar();
     await screen.findByText("Tarefa 7");
 
-    await usuario.click(botaoExcluir(7));
+    await pedirExclusao(usuario, 7);
 
     expect(
       await screen.findByText("Tarefa 7 não encontrada"),
@@ -205,11 +243,10 @@ describe("exclusão", () => {
   it("troca falha de rede por mensagem amigável e mantém o item", async () => {
     mockListar.mockResolvedValue(pagina([7]));
     mockDeletar.mockRejectedValue(new Error("Failed to fetch"));
-    jest.spyOn(window, "confirm").mockReturnValue(true);
     const { usuario } = renderizar();
     await screen.findByText("Tarefa 7");
 
-    await usuario.click(botaoExcluir(7));
+    await pedirExclusao(usuario, 7);
 
     expect(
       await screen.findByText(

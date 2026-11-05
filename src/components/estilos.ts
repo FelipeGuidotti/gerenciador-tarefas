@@ -5,3 +5,5 @@ const baseBotao =
 export const botaoPrimario = `${baseBotao} bg-destaque text-white hover:bg-destaque-forte`;
 
 export const botaoSecundario = `${baseBotao} border border-borda-campo bg-white text-tinta hover:bg-hover`;
+
+export const botaoPerigo = `${baseBotao} bg-erro text-white hover:bg-erro-forte`;

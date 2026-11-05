@@ -18,7 +18,7 @@ type Erros = {
 };
 
 const classesCampo =
-  "mt-2 block w-full rounded-controle border border-borda-campo bg-white px-3 py-2.5 text-base text-tinta aria-[invalid=true]:border-erro";
+  "mt-2 block w-full rounded-controle border border-borda-campo bg-white px-3 py-2.5 text-base text-tinta aria-[invalid=true]:border-erro aria-[invalid=true]:focus-visible:outline-erro";
 
 function ErroCampo({ id, mensagens }: { id: string; mensagens?: string[] }) {
   if (!mensagens?.length) return null;
