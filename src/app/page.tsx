@@ -1,9 +1,9 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import Link from "next/link";
+import { botaoPrimario } from "@/components/estilos";
 import { ListaTarefas } from "@/components/ListaTarefas";
 import { TAREFAS_POR_PAGINA } from "@/lib/tarefa-schema";
 import { getQueryClient, trpc } from "@/trpc/server";
-import styles from "./page.module.css";
 
 // Sem isso, o Next geraria a página uma única vez no build (SSG) e a lista
 // ficaria congelada. Assim, ela é renderizada a cada requisição (SSR).
@@ -19,16 +19,16 @@ export default async function Home() {
   );
 
   return (
-    <main className={styles.pagina}>
-      <header className={styles.cabecalho}>
-        <h1>Tarefas</h1>
-        <Link href="/tarefas/nova" prefetch={false} className={styles.nova}>
+    <>
+      <header className="mb-10 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-semibold tracking-tight">Tarefas</h1>
+        <Link href="/tarefas/nova" className={botaoPrimario}>
           Nova tarefa
         </Link>
       </header>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <ListaTarefas />
       </HydrationBoundary>
-    </main>
+    </>
   );
 }

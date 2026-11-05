@@ -1,42 +1,55 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-fundo: #fafaf9;
+  --color-tinta: #1c1917;
+  --color-secundario: #57534e;
+  --color-terciario: #736c66;
+  --color-borda: #e7e5e4;
+  --color-borda-campo: #8a8279;
+  --color-hover: #f0efed;
+  --color-destaque: #2f5d50;
+  --color-destaque-forte: #244a40;
+  --color-erro: #b42318;
+  --color-erro-forte: #912018;
+  --color-erro-suave: #fdf1ef;
+
+  --radius-controle: 0.5rem;
+  --radius-flutuante: 0.75rem;
+
+  --shadow-flutuante:
+    0 8px 24px -8px rgb(28 25 23 / 0.3), 0 1px 2px rgb(28 25 23 / 0.08);
+
+  --animate-entrada: entrada 160ms ease-out;
+
+  @keyframes entrada {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
   }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   html {
-    color-scheme: dark;
+    /* "only" também impede o escurecimento automático do Chrome no Android. */
+    color-scheme: only light;
+  }
+
+  body {
+    @apply bg-fundo text-tinta antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-destaque);
+    outline-offset: 2px;
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
   }
 }
