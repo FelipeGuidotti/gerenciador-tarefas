@@ -45,6 +45,18 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
     trpc.tarefas.deletar.mutationOptions({
       onSuccess: () => {
         moverFocoParaVizinho();
+        // Sai da tela já, sem depender da atualização abaixo, que pode falhar.
+        queryClient.setQueryData(
+          trpc.tarefas.listar.infiniteQueryKey({ limit: TAREFAS_POR_PAGINA }),
+          (dados) =>
+            dados && {
+              ...dados,
+              pages: dados.pages.map((pagina) => ({
+                ...pagina,
+                itens: pagina.itens.filter(({ id }) => id !== tarefa.id),
+              })),
+            },
+        );
         mostrarFeedback({
           tipo: "sucesso",
           texto: `Tarefa "${tarefa.titulo}" excluída.`,
@@ -183,7 +195,7 @@ export function ListaTarefas() {
 
   const tarefas = data.pages.flatMap((pagina) => pagina.itens);
 
-  if (tarefas.length === 0) {
+  if (tarefas.length === 0 && !hasNextPage) {
     return (
       <div className="py-16">
         <p className="text-tinta">Nenhuma tarefa cadastrada ainda.</p>

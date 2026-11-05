@@ -18,6 +18,7 @@ jest.mock("@/trpc/client", () => ({
             mockListar(pageParam),
           ...opcoes,
         }),
+        infiniteQueryKey: () => ["listar"],
         pathFilter: () => ({ queryKey: ["listar"] }),
       },
       deletar: {
@@ -223,6 +224,39 @@ describe("exclusão", () => {
     ).toBeInTheDocument();
     await waitFor(() => expect(titulos()).toEqual(["Tarefa 8"]));
     expect(mockDeletar.mock.calls[0][0]).toEqual({ id: 7 });
+  });
+
+  it("tira a tarefa da tela mesmo se a atualização da lista falhar", async () => {
+    mockListar.mockResolvedValueOnce(pagina([8, 7]));
+    mockListar.mockRejectedValue(new Error("falhou"));
+    mockDeletar.mockResolvedValue({ id: 7 });
+    const { usuario } = renderizar();
+    await screen.findByText("Tarefa 7");
+
+    await pedirExclusao(usuario, 7);
+
+    await screen.findByText('Tarefa "Tarefa 7" excluída.');
+    await waitFor(() => expect(mockListar).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(titulos()).toEqual(["Tarefa 8"]));
+  });
+
+  it("não diz que a lista está vazia se ainda houver páginas para carregar", async () => {
+    mockListar.mockResolvedValueOnce(pagina([7], 7));
+    mockListar.mockRejectedValue(new Error("falhou"));
+    mockDeletar.mockResolvedValue({ id: 7 });
+    const { usuario } = renderizar();
+    await screen.findByText("Tarefa 7");
+
+    await pedirExclusao(usuario, 7);
+
+    await screen.findByText('Tarefa "Tarefa 7" excluída.');
+    await waitFor(() => expect(mockListar).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading")).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByText("Nenhuma tarefa cadastrada ainda."),
+    ).not.toBeInTheDocument();
   });
 
   it("mostra a mensagem do backend em 404 e atualiza a lista desatualizada", async () => {
