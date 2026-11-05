@@ -93,14 +93,18 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
         >
           Editar
         </Link>
+        {/* aria-disabled, e não disabled: um botão desabilitado perde o foco, e
+            quem usa teclado ficaria sem posição se a exclusão falhasse. */}
         <button
           type="button"
-          onClick={() => setConfirmando(true)}
-          disabled={deletar.isPending}
+          onClick={() => {
+            if (!deletar.isPending) setConfirmando(true);
+          }}
+          aria-disabled={deletar.isPending}
           aria-label={
             deletar.isPending ? undefined : `Excluir a tarefa "${tarefa.titulo}"`
           }
-          className={`${baseAcao} hover:bg-erro-suave hover:text-erro-forte disabled:cursor-progress disabled:opacity-60`}
+          className={`${baseAcao} hover:bg-erro-suave hover:text-erro-forte aria-disabled:cursor-progress aria-disabled:opacity-60`}
         >
           {deletar.isPending ? "Excluindo..." : "Excluir"}
         </button>

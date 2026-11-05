@@ -22,6 +22,7 @@ export function DialogoConfirmacao({
 }: Props) {
   const dialogo = useRef<HTMLDialogElement>(null);
   const idTitulo = useId();
+  const idMensagem = useId();
 
   useEffect(() => {
     dialogo.current?.showModal();
@@ -35,6 +36,7 @@ export function DialogoConfirmacao({
     <dialog
       ref={dialogo}
       aria-labelledby={idTitulo}
+      aria-describedby={idMensagem}
       onClose={onFechar}
       onClick={(evento) => {
         // O conteúdo fica em uma div interna: só o fundo tem o próprio dialog
@@ -47,7 +49,10 @@ export function DialogoConfirmacao({
         <h2 id={idTitulo} className="text-lg font-semibold tracking-tight">
           {titulo}
         </h2>
-        <p className="mt-2 text-sm leading-6 wrap-anywhere text-secundario">
+        <p
+          id={idMensagem}
+          className="mt-2 text-sm leading-6 wrap-anywhere text-secundario"
+        >
           {mensagem}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">

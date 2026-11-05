@@ -175,6 +175,7 @@ curl -X POST http://localhost:3000/api/trpc/tarefas.criar \
 ```json
 {
   "error": {
+    "message": "Dados inválidos",
     "data": {
       "code": "BAD_REQUEST",
       "httpStatus": 400,
@@ -201,7 +202,7 @@ curl -X POST http://localhost:3000/api/trpc/tarefas.criar \
 }
 ```
 
-Em erros de validação, `message` traz o JSON bruto do Zod. Por isso, a interface lê `errosCampos`.
+Em erros de validação, o detalhe de cada campo fica em `errosCampos`. Erros inesperados respondem 500 com a mensagem `Erro interno do servidor`, sem expor o texto original.
 
 ## Principais decisões
 
@@ -223,7 +224,7 @@ Em erros de validação, `message` traz o JSON bruto do Zod. Por isso, a interfa
 
 **Fuso fixo nas datas.** Servidor e navegador em fusos diferentes gerariam textos diferentes e um erro de hidratação. Por isso, as datas sempre aparecem no horário de Brasília.
 
-**`router.replace` depois de salvar.** Assim, o botão Voltar não reabre o formulário com dados antigos, que sobrescreveriam a edição se fossem salvos de novo.
+**`replace` ao salvar e ao cancelar.** Assim, o botão Voltar não reabre o formulário com dados antigos, que sobrescreveriam a edição se fossem salvos de novo.
 
 **`<dialog>` nativo no modal.** O navegador já cuida do foco preso no modal, da tecla Esc, do bloqueio do fundo e da volta do foco, sem biblioteca.
 
@@ -251,7 +252,7 @@ Para confirmar que a suíte pega bugs, inserimos defeitos de propósito, como o 
 - **Dados em memória:** somem ao reiniciar o servidor, e esse armazenamento não funciona em serverless com várias instâncias. O case dispensa banco de dados e o projeto não tem deploy.
 - **Atualização completa:** `atualizar` substitui os dados da tarefa, como um `PUT`. Enviar uma tarefa sem `descricao` apaga a descrição dela.
 - **Horário fixo:** um usuário em outro fuso vê as datas no horário de Brasília.
-- **Volta à lista:** depois de salvar, a lista recomeça na primeira página.
+- **Volta à lista:** depois de salvar ou cancelar, a lista recomeça na primeira página. Com o Voltar do navegador, as tarefas já carregadas continuam na tela.
 - **Sem autenticação:** qualquer pessoa com acesso ao app pode alterar as tarefas.
-- **Versão do Next:** o case cita a v15, então o projeto usa o último patch dessa linha (15.5.29), embora a v16 já exista. O `npm audit` aponta uma vulnerabilidade moderada no `next` e uma alta no `postcss`, e a única correção oferecida é migrar para o Next 16. O risco prático é baixo, porque o projeto roda localmente, sem deploy.
+- **Versão do Next:** o case cita a v15, então o projeto usa o último patch dessa linha (15.5.29), embora a v16 já exista. Nas dependências de produção, `npm audit --omit=dev` aponta uma vulnerabilidade moderada no `next` e uma alta no `postcss`, e a única correção oferecida é migrar para o Next 16. O risco prático é baixo, porque o projeto roda localmente, sem deploy. O aviso do `npm install` mostra um número maior porque inclui as ferramentas de desenvolvimento, como Jest e ESLint, que não fazem parte da aplicação.
 - **Testes:** a suíte não abre um navegador real, então não pega problemas de CSS nem de hidratação. O uso com leitor de tela e em celular real não foi verificado.

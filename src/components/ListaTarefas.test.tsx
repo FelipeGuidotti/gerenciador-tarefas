@@ -205,10 +205,15 @@ describe("exclusão", () => {
 
     await pedirExclusao(usuario, 7);
 
-    expect(
-      await screen.findByRole("button", { name: "Excluindo..." }),
-    ).toBeDisabled();
-    expect(botaoExcluir(8)).toBeEnabled();
+    const excluindo = await screen.findByRole("button", {
+      name: "Excluindo...",
+    });
+    expect(excluindo).toHaveAttribute("aria-disabled", "true");
+    expect(botaoExcluir(8)).toHaveAttribute("aria-disabled", "false");
+
+    await usuario.click(excluindo);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
 
     mockListar.mockResolvedValue(pagina([8]));
     await act(async () => concluir({ id: 7 }));
@@ -254,7 +259,9 @@ describe("exclusão", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText("Failed to fetch")).not.toBeInTheDocument();
-    await waitFor(() => expect(botaoExcluir(7)).toBeEnabled());
+    await waitFor(() =>
+      expect(botaoExcluir(7)).toHaveAttribute("aria-disabled", "false"),
+    );
   });
 });
 

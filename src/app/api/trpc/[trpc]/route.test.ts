@@ -120,6 +120,7 @@ describe("tarefas.criar", () => {
     const { status, erro } = await executar("criar", entrada);
 
     expect(status).toBe(400);
+    expect(erro.message).toBe("Dados inválidos");
     expect(erro.data.code).toBe("BAD_REQUEST");
     expect(erro.data.errosCampos.titulo).toEqual(["O título é obrigatório"]);
   });
@@ -180,6 +181,27 @@ describe("tarefas.atualizar", () => {
 
     expect(status).toBe(404);
     expect(erro.message).toBe("Tarefa 9999 não encontrada");
+  });
+});
+
+describe("erros internos", () => {
+  afterEach(() => {
+    jest.dontMock("@/server/tarefas/store");
+  });
+
+  it("responde 500 sem expor o texto do erro original", async () => {
+    jest.resetModules();
+    jest.doMock("@/server/tarefas/store", () => ({
+      listarTarefas: () => {
+        throw new Error("detalhe interno");
+      },
+    }));
+    rota = await import("./route");
+
+    const { status, erro } = await consultar("listar", {});
+
+    expect(status).toBe(500);
+    expect(erro.message).toBe("Erro interno do servidor");
   });
 });
 

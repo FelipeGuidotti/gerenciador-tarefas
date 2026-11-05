@@ -148,9 +148,9 @@ describe("editar", () => {
 });
 
 describe("erros do backend", () => {
-  it("mostra o erro abaixo do campo, e não o JSON do Zod", async () => {
+  it("mostra o erro abaixo do campo, e não a mensagem genérica", async () => {
     mockCriar.mockRejectedValue({
-      message: '[{"code":"too_small","path":["titulo"]}]',
+      message: "Dados inválidos",
       data: {
         code: "BAD_REQUEST",
         errosCampos: { titulo: ["O título é obrigatório"] },
@@ -162,8 +162,24 @@ describe("erros do backend", () => {
     await usuario.click(screen.getByRole("button", { name: "Criar tarefa" }));
 
     expect(await screen.findByText("O título é obrigatório")).toBeInTheDocument();
-    expect(screen.queryByText(/too_small/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Dados inválidos")).not.toBeInTheDocument();
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it("não mostra ao usuário o texto de um erro interno", async () => {
+    mockCriar.mockRejectedValue({
+      message: "Erro interno do servidor",
+      data: { code: "INTERNAL_SERVER_ERROR", errosCampos: null },
+    });
+    const { usuario, titulo } = renderizar();
+    await usuario.type(titulo, "Texto digitado");
+
+    await usuario.click(screen.getByRole("button", { name: "Criar tarefa" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível salvar a tarefa.",
+    );
+    expect(titulo).toHaveValue("Texto digitado");
   });
 
   it("mostra a mensagem do backend quando a tarefa não existe mais", async () => {

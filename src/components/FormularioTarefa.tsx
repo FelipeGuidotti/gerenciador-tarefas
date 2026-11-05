@@ -55,8 +55,8 @@ export function FormularioTarefa({ tarefa }: { tarefa?: Tarefa }) {
       exibirErrosCampos(campos);
       return;
     }
-    // Só o 404 tem message legível: nos demais casos, ela pode ser o JSON do
-    // Zod ou um texto de rede em inglês.
+    // Só o 404 traz uma message útil ao usuário: uma falha de rede, por exemplo,
+    // chega com um texto técnico em inglês.
     setErroGeral(
       erro.data?.code === "NOT_FOUND"
         ? erro.message
@@ -180,7 +180,8 @@ export function FormularioTarefa({ tarefa }: { tarefa?: Tarefa }) {
         <button type="submit" disabled={enviando} className={botaoPrimario}>
           {rotuloEnvio}
         </button>
-        <Link href="/" className={botaoSecundario}>
+        {/* replace pelo mesmo motivo de aoConcluir: tira o formulário do histórico. */}
+        <Link href="/" replace className={botaoSecundario}>
           Cancelar
         </Link>
       </div>
