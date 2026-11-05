@@ -22,6 +22,18 @@ npm start
 
 O build baixa a fonte Geist, então precisa de internet. Ao iniciar, o app já traz 30 tarefas fictícias, e tudo volta a esse estado quando o servidor reinicia.
 
+## Testes
+
+```bash
+npm test
+```
+
+São testes em Jest e Testing Library, sem precisar de servidor rodando:
+
+- **Regras:** os schemas Zod, como título obrigatório e limites de tamanho.
+- **API:** chamadas à rota real do tRPC, passando pela validação e pelo store até a resposta HTTP. Inclui os erros 400 e 404 e a paginação com exclusão durante a rolagem.
+- **Formulário e lista:** o comportamento na tela, com a API simulada. Inclui validação, erros, exclusão e infinite scroll.
+
 ## Funcionalidades
 
 - **Listagem:** renderizada no servidor (SSR), com infinite scroll e exclusão com confirmação.
@@ -30,7 +42,7 @@ O build baixa a fonte Geist, então precisa de internet. Ao iniciar, o app já t
 
 ## Stack
 
-Next.js 15 (App Router), React 19, TypeScript, tRPC 11, TanStack Query 5, Zod 4 e Tailwind CSS 4.
+Next.js 15 (App Router), React 19, TypeScript, tRPC 11, TanStack Query 5, Zod 4, Tailwind CSS 4, Jest e Testing Library.
 
 ## Arquitetura
 
@@ -69,4 +81,4 @@ Três regras mantêm as camadas separadas:
 - **Dados em memória:** somem ao reiniciar o servidor, e esse armazenamento não funciona em serverless com várias instâncias. O case dispensa banco de dados.
 - **Atualização completa:** `atualizar` substitui os dados da tarefa, como um `PUT`. Enviar uma tarefa sem `descricao` apaga a descrição dela.
 - **Versão do Next:** o case pede a v15, então o projeto usa o último patch dessa linha (15.5.29). O `npm audit` aponta uma vulnerabilidade moderada no `next` e uma alta no `postcss`, e a única correção oferecida é migrar para o Next 16. O risco prático é baixo, porque o projeto roda localmente, sem deploy.
-- **Testes:** o repositório não inclui testes automatizados, para manter o projeto simples. O comportamento foi verificado em navegador real durante o desenvolvimento.
+- **Testes:** a suíte não abre um navegador real. Durante o desenvolvimento, os fluxos também foram verificados no Chrome, com scripts que não fazem parte do repositório.
