@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { botaoSecundario } from "@/components/estilos";
 import { useFeedback } from "@/components/Feedback";
 import { TAREFAS_POR_PAGINA, type Tarefa } from "@/lib/tarefa-schema";
@@ -98,12 +99,43 @@ function ItemTarefa({ tarefa }: { tarefa: Tarefa }) {
 
 export function ListaTarefas() {
   const trpc = useTRPC();
-  const { data, isError, refetch } = useInfiniteQuery(
+  const {
+    data,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useInfiniteQuery(
     trpc.tarefas.listar.infiniteQueryOptions(
       { limit: TAREFAS_POR_PAGINA },
       { getNextPageParam: (pagina) => pagina.proximoCursor },
     ),
   );
+
+  const sentinela = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Após uma falha, a nova tentativa é manual, para não repetir em loop.
+    if (!sentinela.current || !hasNextPage || isFetchNextPageError) return;
+
+    const observador = new IntersectionObserver(
+      ([entrada]) => {
+        // isFetching, e não só isFetchingNextPage: buscar a próxima página
+        // cancelaria uma atualização em andamento, e uma tarefa excluída
+        // continuaria na tela.
+        if (entrada.isIntersecting && !isFetching) fetchNextPage();
+      },
+      // Busca antes de chegar ao fim, para a rolagem não parar.
+      { rootMargin: "200px" },
+    );
+    // Recriado ao fim de cada busca: o novo observador avisa de imediato se a
+    // sentinela ainda estiver visível, o que preenche telas muito altas.
+    observador.observe(sentinela.current);
+    return () => observador.disconnect();
+  }, [hasNextPage, isFetching, isFetchNextPageError, fetchNextPage]);
 
   if (!data) {
     return isError ? (
@@ -141,10 +173,37 @@ export function ListaTarefas() {
   }
 
   return (
-    <ul className="divide-y divide-borda border-y border-borda">
-      {tarefas.map((tarefa) => (
-        <ItemTarefa key={tarefa.id} tarefa={tarefa} />
-      ))}
-    </ul>
+    <>
+      <ul className="divide-y divide-borda border-y border-borda">
+        {tarefas.map((tarefa) => (
+          <ItemTarefa key={tarefa.id} tarefa={tarefa} />
+        ))}
+      </ul>
+      <div ref={sentinela} aria-hidden="true" />
+      {isFetchingNextPage && (
+        <p role="status" className="py-6 text-sm text-secundario">
+          Carregando mais tarefas...
+        </p>
+      )}
+      {isFetchNextPageError && !isFetchingNextPage && (
+        <div role="alert" className="py-6">
+          <p className="mb-3 text-sm text-erro">
+            Não foi possível carregar mais tarefas.
+          </p>
+          <button
+            type="button"
+            onClick={() => fetchNextPage()}
+            className={botaoSecundario}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+      {!hasNextPage && data.pages.length > 1 && (
+        <p className="py-6 text-sm text-terciario">
+          Todas as tarefas foram carregadas.
+        </p>
+      )}
+    </>
   );
 }
